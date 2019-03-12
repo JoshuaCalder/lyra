@@ -1,25 +1,27 @@
+'''
+This version uses a Markov Chain to model the text using bigrams.
+
+After querying a lyric repository for matching song lyrics,
+the lyrics are then tokenized and entered into memory as 
+a 'bag of words'. 
+
+When generating the next possible word, the most frequently 
+occuring bigram is chosen. In case of a tie, a random bigram 
+from among the most probabilistic next words is chosen
+'''
+
+import sys, random
 import nltk 
-import random
+import lyricsgenius
+import config #contains genius api key
 
-corpus = "\
-There's a spider on the floor, on the floor.\
-There's a spider on the floor, on the floor.\
-Who could ask for anything more, than a spider on the floor.\
-There's a spider on the floor, on the floor.\
-Now the spider's on my leg, on my leg.\
-Now the spider's on my leg, on my leg.\
-Oh, I wish I had some Raid for this spider on my leg!\
-Now the spider's on my leg, on my leg.\
-Now the spider's on my chest, on my chest! \
-Now the spider's on my chest, on my chest! \
-Oh, I'd squish him in my vest, if it didn't make a mess! \
-Now the spider's on my chest, on my chest!"
-
-# https://sookocheff.com/post/nlp/ngram-modeling-with-markov-chains/
+# Bigram Markov chain inspired by: 
+# sookocheff.com/post/nlp/ngram-modeling-with-markov-chains/
 class Generator:
 	def __init__(self):
 		self.memory = {}
 
+	# enters the bigram into memory if it isn't in memory already
 	def _learn_key(self, key, value):
 		if key not in self.memory:
 			self.memory[key] = []
@@ -31,6 +33,7 @@ class Generator:
 		bigrams = [(tokens[i], tokens[i + 1]) for i in range(0, len(tokens) - 1)]	
 		for bigram in bigrams:
 			self._learn_key(bigram[0], bigram[1])
+		return random.sample(tokens, 1)[0]
 
 	def _next(self, current_state):
 		next_possible = self.memory.get(current_state)
@@ -45,9 +48,21 @@ class Generator:
 		next_word = self._next(state)
 		return state + ' ' + self.babble(amount - 1, next_word)	
 
+def get_lyrics(artist_name):
+	lyrics = ''
+	genius = lyricsgenius.Genius(config.api_key)
+	artist = genius.search_artist(artist_name, max_songs=5, sort="title")
+	for s in artist.songs:
+		song = genius.search_song(s.title, artist.name)
+		lyrics += song.lyrics
+	return lyrics
+
 if __name__ == '__main__':
+	if len(sys.argv) < 1:
+		print('Please provide an artist name as input')
+		sys.exit(1)	
 	g = Generator()
-	g.learn(corpus)
-	# print(g.memory)
-	# for i in range(5):
-	print(g.babble(5, "There's"))
+	start_word = g.learn(get_lyrics(sys.argv[1]))	
+	print('\n\n**********************\n\n')
+	print('\nGenerated Song\n')
+	print(g.babble(20, start_word))
