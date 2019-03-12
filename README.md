@@ -1,3 +1,10 @@
 # lyra
 nlp-powered lyric generator. 
-work in progress.
+Generates song lyrics based on a specific artist's lyrics
+
+To run lyra, you will need your own Genius API key which can 
+be acquired here: https://docs.genius.com/
+
+Replace `config.api_key` with your own API key
+
+`python main.py "artist name"`
