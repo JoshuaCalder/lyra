@@ -1,0 +1,6 @@
+1. remove non-english and nonsensical words from training corpus
+2. add lyric cleaner to main.py
+3. fix backtracking issue when no match found 
+4. add n-gram backoff, starting at n=5
+6. randomize rhyme word
+7. force rhyme to be noun or verb

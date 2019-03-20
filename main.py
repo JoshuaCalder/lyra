@@ -153,7 +153,7 @@ def generate_line_backward(possible_rhymes, gram2):
 		print_line(line)
 
 if __name__ == '__main__':
-	f = open('rock_corpus.txt', 'r')
+	f = open('rap_corpus_small.txt', 'r')
 	txt = f.read()
 	f.close()
 	words = re.split('[^A-Za-z\'.]+', txt.lower())
@@ -161,7 +161,7 @@ if __name__ == '__main__':
 	filtered_words = filter(None, words) # Remove empty strings
 	gram2 = two_gram(filtered_words)
 	
-	for i in range(1):
+	for i in range(8):
 		starting_word = random.choice(words)
 		last_word = generate_line_forward(starting_word, gram2)
 		possible_rhymes = pronouncing.rhymes(last_word)
