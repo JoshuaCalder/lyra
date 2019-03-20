@@ -156,8 +156,9 @@ if __name__ == '__main__':
 	f = open('rap_corpus_small.txt', 'r')
 	txt = f.read()
 	f.close()
+	txt = re.sub("[\(\[].*?[\)\]]", "", txt)
+	txt = re.sub("^###.*\n?", "", txt, flags=re.MULTILINE)
 	words = re.split('[^A-Za-z\'.]+', txt.lower())
-	
 	filtered_words = filter(None, words) # Remove empty strings
 	gram2 = two_gram(filtered_words)
 	
