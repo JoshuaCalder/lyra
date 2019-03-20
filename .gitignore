@@ -1,5 +1,14 @@
 config.py
 
+# text corpus
+rock_corpus.txt
+rock_list_small.txt
+rap_corpus_small.txt
+rap_corpus_small2.txt
+corpus_rock2.txt
+rapper_list.txt
+rapper_list_small.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
