@@ -1,15 +1,22 @@
 '''
-This script is used to gather a massive training corpus 
-of hip hop lyrics, based on artists in rapper_list.txt
+This script gathers a training corpus of lyrics,
+based on an input file of artists with 
+artists being entered line-by-line
+
+see example_artist_list.txt for an example input artist list
+
+outputs lyrics to example_corpus.txt
 '''
+
 import lyricsgenius
-import config #contains genius api key
+import config		#contains genius api key
 
 if __name__ == '__main__':
-	artists = open('rock_list_small.txt').read().splitlines()
+	artists = open('example_artist_list.txt').read().splitlines()
+	print('Gathering lyrics from the following artists...\n')
 	print(artists)
 
-	f= open("corpus_rock2.txt","w+")
+	f= open("example_corpus.txt","w+")
 
 	for a in artists:
 		genius = lyricsgenius.Genius(config.api_key)

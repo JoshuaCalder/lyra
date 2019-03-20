@@ -15,10 +15,10 @@ inspired by: http://www.samansari.info/2016/01/generating-sentences-with-markov-
 import sys, random
 import nltk 
 import lyricsgenius
-import config #contains genius api key
 import re
 import operator
 import pronouncing
+import config 		#contains genius api key
 
 # Bigram Markov chain inspired by: 
 # sookocheff.com/post/nlp/ngram-modeling-with-markov-chains/
