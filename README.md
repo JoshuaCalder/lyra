@@ -7,5 +7,5 @@ be acquired here: https://docs.genius.com/
 
 Replace `config.api_key` with your own API key
 
-To run: 
-`python main.py "artist name"`
+To generate song lyrics: 
+`python main.py`
