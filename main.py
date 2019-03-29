@@ -60,10 +60,17 @@ def generate_line_backward(possible_rhymes, gram2):
 	while(len(line) < 6):
 		line = []
 		word = random.choice(possible_rhymes)
-		if word is None:
+
+		no_good_tags = ['PRT', 'DET', 'CONJ']
+		rhyme_tag = nltk.pos_tag(word)[1]
+		count = 0
+		while rhyme_tag in no_good_tags and count < 20:
+			word = random.choice(possible_rhymes)
+			count += 1
+		if word is None or count == 20:
 			generate_line_forward(random.choice(possible_rhymes), gram2)
 			break
-		for x in range(8):
+		for x in range(8):	
 			line.insert(0, word)
 			choices = [element for element in gram2 if element[0][1] == word]
 			if not choices:
@@ -85,17 +92,16 @@ def ngram(words, n=1):
 
 	gram = list(gram2.items())
 	gram.sort(key=operator.itemgetter(1), reverse=True)
-	for i in range(20):
-		print(gram[i])
+	# for i in range(20):
+	# 	print(gram[i])
 	return gram			
 
 if __name__ == '__main__':
-	f = open('rock_list_small.txt', 'r')
+	f = open('rock_corpus.txt', 'r')
 	txt = f.read()
 	f.close()
 	txt = re.sub("[\(\[].*?[\)\]]", "", txt)
 	txt = re.sub("^###.*\n?", "", txt, flags=re.MULTILINE)
-	print(txt)
 	words = re.split('[^A-Za-z\'.]+', txt.lower())
 	filtered_words = filter(None, words) # Remove empty strings
 	gram = ngram(filtered_words, 6)
