@@ -1,9 +1,9 @@
 '''
 This version uses a Markov Chain to model the text using bigrams.
 
-After querying a lyric repository for matching song lyrics,
-the lyrics are then tokenized and entered into memory as 
-a 'bag of words'. 
+After scanning a corpus of song lyrics,
+the lyrics are tokenized and entered into memory as 
+a 'bag of words'. ex// [(('in', 'the'), 1413)]
 
 When generating the next possible word, the most frequently 
 occuring bigram is chosen. In case of a tie, a random bigram 
@@ -14,7 +14,6 @@ inspired by: http://www.samansari.info/2016/01/generating-sentences-with-markov-
 
 import sys, random
 import nltk 
-import lyricsgenius
 import re
 import operator
 import pronouncing
@@ -27,61 +26,60 @@ def weighted_choice(choices):
 	total = sum(w for c, w in choices)
 	# create uniform distribution (same probability)
 	r = random.uniform(0, total)
-	# example of choices (('not', 'anymore'), 10)
 	upto = 0
 	for c, w in choices:
 		if upto + w > r:
 			return c
-		upto += w		
+		upto += w
 
-def print_line(line):
-	count = 0
-	for l in line:
-		if count == len(line)-1:
-			print(l, end=',')
-		else:
-			print(l, end=' ')
-		count += 1
-	print()	
+'''
+:return: generated line based on last rhyming word
 
-def generate_line_forward(word, gram2):
+Generates a line given a rhyming word, works backwords through ngram freq
+'''
+def generate_line_backward(word, gram):
 	line = []
-	for x in range(8):
+	# TODO: reintegrate particle, determine, and conjunction/coordinate constraints
+	# no_good_tags = ['RP', 'DT', 'CC']
+	# rhyme_tag = nltk.pos_tag(word)[1]
+	for __ in range(8):	
+		line.insert(0, word)
+		choices = [element for element in gram if element[0][1] == word]
+		if not choices:
+			break
+		word = weighted_choice(choices)[0]
+	return line
+
+'''
+:return: generated line based on given starting word
+
+Generates a line given a starting word, based on ngram frequencies
+Example of choices:
+If first word is 'up', then choices are (('up', 'i'), 3), (('up', 'you'), 2)
+'''
+def generate_line_forward(word, gram):
+	line = []
+	for __ in range(8):
 		line.append(word)
-		choices = [element for element in gram2 if element[0][0] == word]
+		choices = [element for element in gram if element[0][0] == word]
 		if not choices:
 			break
 		word = weighted_choice(choices)[1]
-	print_line(line)
-	return line[-1]
+	return line
 
-def generate_line_backward(possible_rhymes, gram2):
-	line = []
-	while(len(line) < 6):
-		line = []
-		word = random.choice(possible_rhymes)
+'''
+:param words: list of words to find n-gram frequency
+:param n: str
+:return: list of n-gram tuples
 
-		no_good_tags = ['PRT', 'DET', 'CONJ']
-		rhyme_tag = nltk.pos_tag(word)[1]
-		count = 0
-		while rhyme_tag in no_good_tags and count < 20:
-			word = random.choice(possible_rhymes)
-			count += 1
-		if word is None or count == 20:
-			generate_line_forward(random.choice(possible_rhymes), gram2)
-			break
-		for x in range(8):	
-			line.insert(0, word)
-			choices = [element for element in gram2 if element[0][1] == word]
-			if not choices:
-				break
-			word = weighted_choice(choices)[0]
-	if len(line) >= 6:
-		print_line(line)
-
-def ngram(words, n=1):
+Generates a list of n-gram tuples
+index 0: n-gram contents
+index 1: n-gram frequency 
+example of 2-gram: [(('in', 'the'), 1413)],
+where the frequency of 'in the' occurs 1413 times
+'''
+def ngram(words, n):
 	gram2 = dict()
-	words = list(words)
 	
 	for i in range(len(words)-(n-1)):
 		key = tuple(words[i:i+n])
@@ -92,25 +90,66 @@ def ngram(words, n=1):
 
 	gram = list(gram2.items())
 	gram.sort(key=operator.itemgetter(1), reverse=True)
-	# for i in range(20):
-	# 	print(gram[i])
-	return gram			
+
+	return gram	
+
+'''
+:return: list containing cleaned text
+Removes [], (), ### tags, empty strings
+Also splits on alpha chars and forces lowercase on all words
+'''
+def text_cleaner(text):
+	text = re.sub("[\(\[].*?[\)\]]", "", text)
+	text = re.sub("^###.*\n?", "", text, flags=re.MULTILINE)
+	words = re.split('[^A-Za-z\'.]+', text.lower())
+	return list(filter(None, words)) # Remove empty strings
 
 if __name__ == '__main__':
-	f = open('rock_corpus.txt', 'r')
+	num_lines = 2	# number of lines the program generates
+	n_gram = 2 		# ngram count, set to 2 for bigram
+	training_corpus = 'rap_corpus_small.txt'
+
+	f = open(training_corpus, 'r')
 	txt = f.read()
 	f.close()
-	txt = re.sub("[\(\[].*?[\)\]]", "", txt)
-	txt = re.sub("^###.*\n?", "", txt, flags=re.MULTILINE)
-	words = re.split('[^A-Za-z\'.]+', txt.lower())
-	filtered_words = filter(None, words) # Remove empty strings
-	gram = ngram(filtered_words, 6)
+
+	filtered_words = text_cleaner(txt) 
+	gram = ngram(filtered_words, n_gram)
 	
-	for i in range(8):
-		starting_word = random.choice(words)
-		last_word = generate_line_forward(starting_word, gram)
-		possible_rhymes = pronouncing.rhymes(last_word)
-		if len(possible_rhymes) == 0:
-			generate_line_forward(random.choice(words), gram)
+	lines = []
+	line_len = 0
+	for i in range(num_lines):
+		# generate first line (no rhyming)
+		if i % 2 == 0:
+			while True:
+				starting_word = random.choice(list(filter(None, filtered_words)))
+				line = generate_line_forward(starting_word, gram)
+				if len(line) == 8:
+					lines.append(line)
+					break
+
+		# generate rhyming line		
+		# if no rhyming line found, recreate first line (no rhyming)		
 		else:
-			generate_line_backward(possible_rhymes, gram)
+			rhyming_word = lines[-1][-1]
+			possible_rhymes = pronouncing.rhymes(rhyming_word)
+			while True:
+				rhyme = random.choice(possible_rhymes)
+				line = generate_line_backward(rhyme, gram)
+				if len(line) < 8:
+					possible_rhymes.remove(rhyme)
+					# TODO: if no rhymes remain, backtrack and remove 
+					# first generated line, restart process
+				else:
+					lines.append(line)
+					break
+
+	# print generated lyrics
+	for line in lines:
+		counter = 0
+		for l in line:
+			if counter == 7:
+				print(l, end=',\n')
+			else:		
+				print(l, end=' ')
+			counter += 1	

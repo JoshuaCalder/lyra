@@ -16,7 +16,7 @@ if __name__ == '__main__':
 	print('Gathering lyrics from the following artists...\n')
 	print(artists)
 
-	f= open("example_corpus.txt","w+")
+	f= open("RAPRAPRAP.txt","w+")
 
 	for a in artists:
 		genius = lyricsgenius.Genius(config.api_key)

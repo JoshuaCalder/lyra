@@ -2,10 +2,10 @@ config.py
 
 # text corpus
 rock_corpus.txt
+rap_corpus.txt
 rock_list_small.txt
 rapper_list.txt
 rapper_list_small.txt
-rap_corpus_small.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
