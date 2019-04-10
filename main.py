@@ -91,7 +91,7 @@ def ngram(words, n):
 	gram = list(gram2.items())
 	gram.sort(key=operator.itemgetter(1), reverse=True)
 
-	return gram	
+	return gram 
 
 '''
 :return: list containing cleaned text
@@ -105,9 +105,9 @@ def text_cleaner(text):
 	return list(filter(None, words)) # Remove empty strings
 
 if __name__ == '__main__':
-	num_lines = 2	# number of lines the program generates
-	n_gram = 2 		# ngram count, set to 2 for bigram
-	training_corpus = 'rap_corpus_small.txt'
+	num_lines = 4	# number of lines the program generates
+	n_gram = 3 		# ngram count, set to 2 for bigram
+	training_corpus = 'rap_corpus.txt'
 
 	f = open(training_corpus, 'r')
 	txt = f.read()
