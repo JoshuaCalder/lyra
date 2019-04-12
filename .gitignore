@@ -6,6 +6,7 @@ rap_corpus.txt
 rock_list_small.txt
 rapper_list.txt
 rapper_list_small.txt
+gram.pickle
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
