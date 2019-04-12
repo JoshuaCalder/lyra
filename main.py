@@ -18,19 +18,22 @@ import re
 import operator
 import pronouncing
 import config 		#contains genius api key
+import pickle
 
 # https://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
 # weighted version of random.choice
 def weighted_choice(choices):
 	# gets total count of all choices
-	total = sum(w for c, w in choices)
+	total = sum(c[1]['frequency'] for c in choices)
+
 	# create uniform distribution (same probability)
 	r = random.uniform(0, total)
 	upto = 0
-	for c, w in choices:
-		if upto + w > r:
-			return c
-		upto += w
+	for c in choices:
+		if upto + c[1]['frequency'] > r:
+			# return ngram tuple 
+			return c[0]
+		upto += c[1]['frequency']
 
 '''
 :return: generated line based on last rhyming word
@@ -41,7 +44,6 @@ def generate_line_backward(word, gram):
 	line = []
 	# TODO: reintegrate particle, determine, and conjunction/coordinate constraints
 	# no_good_tags = ['RP', 'DT', 'CC']
-	# rhyme_tag = nltk.pos_tag(word)[1]
 	for __ in range(8):	
 		line.insert(0, word)
 		choices = [element for element in gram if element[0][1] == word]
@@ -68,6 +70,18 @@ def generate_line_forward(word, gram):
 	return line
 
 '''
+:param gram: ngram tuple
+:return: list of corresponding POS tags
+'''
+def get_gram_tags(gram):
+	tags = []
+	for g in gram:
+		text = nltk.word_tokenize(g)
+		tag = nltk.pos_tag(text)
+		tags.append(tag[0][1])
+	return tags		
+
+'''
 :param words: list of words to find n-gram frequency
 :param n: str
 :return: list of n-gram tuples
@@ -79,17 +93,22 @@ example of 2-gram: [(('in', 'the'), 1413)],
 where the frequency of 'in the' occurs 1413 times
 '''
 def ngram(words, n):
+	print('creating ngram...')
 	gram2 = dict()
 	
 	for i in range(len(words)-(n-1)):
 		key = tuple(words[i:i+n])
 		if key in gram2:
-			gram2[key] += 1
+			gram2[key]['frequency'] += 1
 		else:
-			gram2[key] = 1
+			gram_tags = get_gram_tags(key)
+			gram2[key] = {
+				'frequency': 1,
+				'tags': gram_tags
+			}
 
 	gram = list(gram2.items())
-	gram.sort(key=operator.itemgetter(1), reverse=True)
+	# gram.sort(key=operator.itemgetter(1)('frequency'), reverse=True)
 
 	return gram 
 
@@ -104,18 +123,34 @@ def text_cleaner(text):
 	words = re.split('[^A-Za-z\'.]+', text.lower())
 	return list(filter(None, words)) # Remove empty strings
 
-if __name__ == '__main__':
-	num_lines = 4	# number of lines the program generates
-	n_gram = 3 		# ngram count, set to 2 for bigram
-	training_corpus = 'rap_corpus.txt'
-
-	f = open(training_corpus, 'r')
+def create_gram_pickle(corpus):
+	f = open(corpus, 'r')
 	txt = f.read()
 	f.close()
 
 	filtered_words = text_cleaner(txt) 
 	gram = ngram(filtered_words, n_gram)
+
+	pickle_out = open('gram.pickle', 'wb')
+	pickle.dump(gram, pickle_out)
+	pickle_out.close()
+
+if __name__ == '__main__':
+	num_lines = 4	# number of lines the program generates
+	n_gram = 2		# ngram count, set to 2 for bigram
+
+	training_corpus = 'rap_corpus.txt'
+	f = open(training_corpus, 'r')
+	txt = f.read()
+	f.close()
+
+	filtered_words = text_cleaner(txt) 
+	# create_gram_pickle(training_corpus)
+	# print('pickle good')
 	
+	pickle_in = open("gram.pickle","rb")
+	gram = pickle.load(pickle_in)
+
 	lines = []
 	line_len = 0
 	for i in range(num_lines):
@@ -127,7 +162,6 @@ if __name__ == '__main__':
 				if len(line) == 8:
 					lines.append(line)
 					break
-
 		# generate rhyming line		
 		# if no rhyming line found, recreate first line (no rhyming)		
 		else:
