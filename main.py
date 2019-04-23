@@ -28,6 +28,7 @@ def weighted_choice(choices):
 
 	# create uniform distribution (same probability)
 	r = random.uniform(0, total)
+
 	upto = 0
 	for c in choices:
 		if upto + c[1]['frequency'] > r:
@@ -106,9 +107,9 @@ def ngram(words, n):
 				'frequency': 1,
 				'tags': gram_tags
 			}
-
+	for x in range(8):
+		print(gram2[x])
 	gram = list(gram2.items())
-	# gram.sort(key=operator.itemgetter(1)('frequency'), reverse=True)
 
 	return gram 
 
@@ -135,22 +136,7 @@ def create_gram_pickle(corpus):
 	pickle.dump(gram, pickle_out)
 	pickle_out.close()
 
-if __name__ == '__main__':
-	num_lines = 4	# number of lines the program generates
-	n_gram = 2		# ngram count, set to 2 for bigram
-
-	training_corpus = 'rap_corpus.txt'
-	f = open(training_corpus, 'r')
-	txt = f.read()
-	f.close()
-
-	filtered_words = text_cleaner(txt) 
-	# create_gram_pickle(training_corpus)
-	# print('pickle good')
-	
-	pickle_in = open("gram.pickle","rb")
-	gram = pickle.load(pickle_in)
-
+def generate_lyrics(num_lines, filtered_words):
 	lines = []
 	line_len = 0
 	for i in range(num_lines):
@@ -168,15 +154,35 @@ if __name__ == '__main__':
 			rhyming_word = lines[-1][-1]
 			possible_rhymes = pronouncing.rhymes(rhyming_word)
 			while True:
+				if len(possible_rhymes) == 0:
+					return []
 				rhyme = random.choice(possible_rhymes)
 				line = generate_line_backward(rhyme, gram)
 				if len(line) < 8:
 					possible_rhymes.remove(rhyme)
-					# TODO: if no rhymes remain, backtrack and remove 
-					# first generated line, restart process
 				else:
 					lines.append(line)
 					break
+	return lines			
+
+if __name__ == '__main__':
+	num_lines = 4	# number of lines the program generates
+	n_gram = 4		# ngram count, set to 2 for bigram
+
+	training_corpus = 'rap_corpus.txt'
+	f = open(training_corpus, 'r')
+	txt = f.read()
+	f.close()
+
+	filtered_words = text_cleaner(txt) 
+	# create_gram_pickle(training_corpus) 
+	
+	pickle_in = open("gram.pickle","rb")
+	gram = pickle.load(pickle_in)
+
+	lines = generate_lyrics(num_lines, filtered_words)
+	while len(lines) < num_lines:
+		lines = generate_lyrics(num_lines, filtered_words)
 
 	# print generated lyrics
 	for line in lines:
