@@ -43,8 +43,6 @@ Generates a line given a rhyming word, works backwords through ngram freq
 '''
 def generate_line_backward(word, gram):
 	line = []
-	# TODO: reintegrate particle, determine, and conjunction/coordinate constraints
-	# no_good_tags = ['RP', 'DT', 'CC']
 	for __ in range(8):	
 		line.insert(0, word)
 		choices = [element for element in gram if element[0][1] == word]
@@ -157,6 +155,13 @@ def generate_lyrics(num_lines, filtered_words):
 				if len(possible_rhymes) == 0:
 					return []
 				rhyme = random.choice(possible_rhymes)
+				rhyme_tag = nltk.pos_tag(rhyme)
+
+				# remove particle, determine, and conjunction/coordinates
+				bad_tags = ['RP', 'DT', 'CC']
+				if rhyme_tag in bad_tags:
+					possible_rhymes.remove(rhyme)
+			
 				line = generate_line_backward(rhyme, gram)
 				if len(line) < 8:
 					possible_rhymes.remove(rhyme)
