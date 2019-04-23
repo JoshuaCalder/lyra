@@ -166,8 +166,8 @@ def generate_lyrics(num_lines, filtered_words):
 	return lines			
 
 if __name__ == '__main__':
-	num_lines = 4	# number of lines the program generates
-	n_gram = 4		# ngram count, set to 2 for bigram
+	num_lines = int(sys.argv[1])	# number of lines the program generates
+	n_gram = int(sys.argv[2]) 		# ngram count, set to 2 for bigram
 
 	training_corpus = 'rap_corpus.txt'
 	f = open(training_corpus, 'r')
