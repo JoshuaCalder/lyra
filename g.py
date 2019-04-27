@@ -18,7 +18,7 @@ def text_cleaner(text):
 	return list(filter(None, words)) # Remove empty strings
 
 if __name__ == '__main__':
-	training_corpus = 'rap_corpus.txt'
+	training_corpus = 'small.txt'
 	bigram_list = []
 
 	with open(training_corpus) as f:
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 	G.add_edges_from(bigram_list)
 
 	# nx.draw(G, with_labels=True, font_weight='bold')
-	# plt.show()
+	plt.show()
 
 	# print(list(G.neighbors('hi')))
 	# print(list(G.nodes))

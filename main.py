@@ -13,6 +13,7 @@ inspired by: http://www.samansari.info/2016/01/generating-sentences-with-markov-
 '''
 
 import sys, random
+import argparse
 import nltk 
 import re
 import operator
@@ -68,80 +69,14 @@ def generate_line_forward(word, gram):
 		word = weighted_choice(choices)[1]
 	return line
 
-'''
-:param gram: ngram tuple
-:return: list of corresponding POS tags
-'''
-def get_gram_tags(gram):
-	tags = []
-	for g in gram:
-		text = nltk.word_tokenize(g)
-		tag = nltk.pos_tag(text)
-		tags.append(tag[0][1])
-	return tags		
-
-'''
-:param words: list of words to find n-gram frequency
-:param n: str
-:return: list of n-gram tuples
-
-Generates a list of n-gram tuples
-index 0: n-gram contents
-index 1: n-gram frequency 
-example of 2-gram: [(('in', 'the'), 1413)],
-where the frequency of 'in the' occurs 1413 times
-'''
-def ngram(words, n):
-	print('creating ngram...')
-	gram2 = dict()
-	
-	for i in range(len(words)-(n-1)):
-		key = tuple(words[i:i+n])
-		if key in gram2:
-			gram2[key]['frequency'] += 1
-		else:
-			gram_tags = get_gram_tags(key)
-			gram2[key] = {
-				'frequency': 1,
-				'tags': gram_tags
-			}
-	for x in range(8):
-		print(gram2[x])
-	gram = list(gram2.items())
-
-	return gram 
-
-'''
-:return: list containing cleaned text
-Removes [], (), ### tags, empty strings
-Also splits on alpha chars and forces lowercase on all words
-'''
-def text_cleaner(text):
-	text = re.sub("[\(\[].*?[\)\]]", "", text)
-	text = re.sub("^###.*\n?", "", text, flags=re.MULTILINE)
-	words = re.split('[^A-Za-z\'.]+', text.lower())
-	return list(filter(None, words)) # Remove empty strings
-
-def create_gram_pickle(corpus):
-	f = open(corpus, 'r')
-	txt = f.read()
-	f.close()
-
-	filtered_words = text_cleaner(txt) 
-	gram = ngram(filtered_words, n_gram)
-
-	pickle_out = open('gram.pickle', 'wb')
-	pickle.dump(gram, pickle_out)
-	pickle_out.close()
-
-def generate_lyrics(num_lines, filtered_words):
+def generate_lyrics(num_lines, gram):
 	lines = []
 	line_len = 0
 	for i in range(num_lines):
 		# generate first line (no rhyming)
 		if i % 2 == 0:
 			while True:
-				starting_word = random.choice(list(filter(None, filtered_words)))
+				starting_word = random.choice(gram[0][0])
 				line = generate_line_forward(starting_word, gram)
 				if len(line) == 8:
 					lines.append(line)
@@ -171,23 +106,18 @@ def generate_lyrics(num_lines, filtered_words):
 	return lines			
 
 if __name__ == '__main__':
-	num_lines = int(sys.argv[1])	# number of lines the program generates
-	n_gram = int(sys.argv[2]) 		# ngram count, set to 2 for bigram
+	parser = argparse.ArgumentParser()
+	parser.add_argument("num_lines", help="number of lines the program generates", type=int)
+	parser.add_argument("pickle_file", help="pickle file to read from", type=str)
+	args = parser.parse_args()
+	num_lines = args.num_lines	# number of lines the program generates
 
-	training_corpus = 'rap_corpus.txt'
-	f = open(training_corpus, 'r')
-	txt = f.read()
-	f.close()
-
-	filtered_words = text_cleaner(txt) 
-	# create_gram_pickle(training_corpus) 
-	
-	pickle_in = open("gram.pickle","rb")
+	pickle_in = open(args.pickle_file, "rb")
 	gram = pickle.load(pickle_in)
 
-	lines = generate_lyrics(num_lines, filtered_words)
+	lines = generate_lyrics(num_lines, gram)
 	while len(lines) < num_lines:
-		lines = generate_lyrics(num_lines, filtered_words)
+		lines = generate_lyrics(num_lines, gram)
 
 	# print generated lyrics
 	for line in lines:
